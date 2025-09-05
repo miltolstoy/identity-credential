@@ -41,9 +41,10 @@ val projectVersionName: String by extra {
     if (projectVersionNext.isEmpty()) {
         projectVersionLast
     } else {
-        val numCommitsSinceTag = runCommand(listOf("git", "rev-list", "${projectVersionLast}..", "--count"))
-        val commitHash = runCommand(listOf("git", "rev-parse", "--short", "HEAD"))
-        projectVersionNext + "-pre.${numCommitsSinceTag}.${commitHash}"
+        // val numCommitsSinceTag = runCommand(listOf("git", "rev-list", "${projectVersionLast}..", "--count"))
+        // val commitHash = runCommand(listOf("git", "rev-parse", "--short", "HEAD"))
+        // projectVersionNext + "-pre.${numCommitsSinceTag}.${commitHash}"
+        projectVersionLast
     }
 }
 

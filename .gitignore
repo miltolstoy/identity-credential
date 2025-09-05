@@ -18,3 +18,5 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 samples/testapp/iosApp/DeveloperConfig.xcconfig
+
+nohup.out

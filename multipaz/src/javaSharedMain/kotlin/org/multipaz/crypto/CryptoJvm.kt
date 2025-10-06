@@ -50,6 +50,13 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import com.google.crypto.tink.shaded.protobuf.ByteString as TinkByteString
+import org.bouncycastle.jcajce.SecretKeyWithEncapsulation
+import org.bouncycastle.jcajce.spec.KEMExtractSpec
+import org.bouncycastle.jcajce.spec.KEMGenerateSpec
+import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec
+import java.security.PrivateKey
+import java.security.PublicKey
+import javax.crypto.KeyGenerator
 
 /**
  * Cryptographic support routines.
@@ -557,6 +564,37 @@ actual object Crypto {
                 }
             }
         }
+
+    actual fun keyAgreementPqc(
+        privateKeyBytes: ByteArray?,
+        publicKeyBytes: ByteArray?,
+        encapsulated: ByteArray?,
+        isInitiator: Boolean,
+    ): Pair<ByteArray, ByteArray?> {
+        val keyFactory = KeyFactory.getInstance("Kyber", "BCPQC")
+        val kemSpec = KyberParameterSpec.kyber512.name
+        if (isInitiator) {
+            // Initiator side: encapsulate to the public key
+            require(publicKeyBytes != null) { "publicKey must be provided for initiator" }
+            val publicKey: PublicKey = keyFactory.generatePublic(X509EncodedKeySpec(publicKeyBytes))
+            val keyGen = KeyGenerator.getInstance("Kyber", "BCPQC")
+            keyGen.init(KEMGenerateSpec(publicKey, kemSpec))
+            val skEnc = keyGen.generateKey() as SecretKeyWithEncapsulation
+            val sharedKey: ByteArray = skEnc.encoded
+            val encapsulatedKey: ByteArray = skEnc.encapsulation
+            return Pair(sharedKey, encapsulatedKey)
+        } else {
+            // Responder side: decapsulate the encapsulated blob
+            require(privateKeyBytes != null) { "privateKey must be provided for responder" }
+            require(encapsulated != null) { "encapsulated data must be provided for responder" }
+            val privateKey: PrivateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))
+            val keyGen = KeyGenerator.getInstance("Kyber", "BCPQC")
+            keyGen.init(KEMExtractSpec(privateKey, encapsulated, kemSpec))
+            val skDec = keyGen.generateKey() as SecretKeyWithEncapsulation
+            val sharedKey: ByteArray = skDec.encoded
+            return Pair(sharedKey, null)
+        }
+    }
 
     private fun hpkeGetKeysetHandles(
         publicKey: EcPublicKey,

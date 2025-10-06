@@ -163,6 +163,13 @@ expect object Crypto {
         otherKey: EcPublicKey
     ): ByteArray
 
+    fun keyAgreementPqc(
+        privateKeyBytes: ByteArray?,
+        publicKeyBytes: ByteArray?,
+        encapsulated: ByteArray? = null,
+        isInitiator: Boolean,
+    ): Pair<ByteArray, ByteArray?>
+
     /**
      * Encrypts data using HPKE according to [RFC 9180](https://datatracker.ietf.org/doc/rfc9180/).
      *

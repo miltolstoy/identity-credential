@@ -108,6 +108,8 @@ kotlin {
             dependsOn(commonMain)
             dependencies {
                 implementation(libs.tink)
+                implementation(libs.bouncy.castle.bcprov)
+                implementation(libs.bouncy.castle.bcpkix)
             }
         }
 

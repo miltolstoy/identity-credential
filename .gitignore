@@ -20,3 +20,4 @@ captures
 samples/testapp/iosApp/DeveloperConfig.xcconfig
 
 nohup.out
+*.podspec

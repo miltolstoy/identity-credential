@@ -221,11 +221,9 @@ class SessionEncryption(
         fun createPqc(role: MdocRole,
                       eSelfKeyPqc: ByteArray,
                       remotePublicKey: ByteArray,
+                      encapsulatedKey: ByteArray,
                       encodedSessionTranscript: ByteArray) : SessionEncryption {
             val isInitiator = (role == MdocRole.MDOC_READER)
-            // TODO: retrieve encapsulated key from the SessionTranscript
-            // TODO: store encapsulated key for mdoc role
-            val encapsulatedKey = if (isInitiator) null else encodedSessionTranscript;
             val kaResult = Crypto.keyAgreementPqc(eSelfKeyPqc, remotePublicKey, encapsulatedKey, isInitiator)
             return SessionEncryption(role, null /*eSelfKey*/, eSelfKeyPqc, kaResult.first, encodedSessionTranscript)
         }
@@ -255,6 +253,16 @@ class SessionEncryption(
             val encodedCoseKey = map["eReaderKey"].asTagged.asBstr
             val publicKey = Cbor.decode(encodedCoseKey).asCoseKey.ecPublicKey
             return EReaderKey(publicKey, encodedCoseKey)
+        }
+
+        fun getPqcEncapsulatedKey(sessionEstablishmentMessage: ByteArray): ByteArray? {
+            val map = Cbor.decode(sessionEstablishmentMessage)
+            val item = map.getOrNull("pqcEncapsulatedKey")
+            if (item == null) {
+                return null;
+            }
+            val keyTagged = item.asTagged.asBstr
+            return Cbor.decode(keyTagged).asBstr
         }
     }
 }

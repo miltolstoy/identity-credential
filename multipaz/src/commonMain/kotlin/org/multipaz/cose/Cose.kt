@@ -47,6 +47,8 @@ object Cose {
      */
     const val COSE_KEY_PARAM_CRV: Long = -1
 
+    const val COSE_KEY_CRV_PQC_KEM: Long = 1
+
     /**
      * The COSE Key type parameter for the X coordinate (bstr).
      *
@@ -81,6 +83,12 @@ object Cose {
      * Reference: https://www.iana.org/assignments/cose/cose.xhtml#key-type
      */
     const val COSE_KEY_TYPE_EC2: Long = 2
+
+    const val COSE_KEY_TYPE_PQC_KEM: Long = 4
+
+    const val COSE_ALG_TYPE: Long = 3
+
+    const val COSE_ALG_TYPE_PQC_KEM: Long = -8179
 
     /**
      * The COSE label for conveying an algorithm.

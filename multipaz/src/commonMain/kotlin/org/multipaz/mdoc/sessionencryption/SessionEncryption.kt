@@ -143,15 +143,14 @@ class SessionEncryption(
 
         val messageData = Cbor.encode(buildCborMap {
             if (!sessionEstablishmentSent && sendSessionEstablishment && role == MdocRole.MDOC_READER) {
-                val coseKey: CoseKey?
+                val coseKey: CoseKey
                 if (eSelfKey != null) {
-                    var eReaderKey = eSelfKey.publicKey
+                    val eReaderKey = eSelfKey.publicKey
                     coseKey = eReaderKey.toCoseKey()
                 } else {
-                    // TODO: implement for PQC
-                    coseKey = null
+                    coseKey = CoseKey.buildPqc(eSelfKeyPqc!!)
                 }
-                putTaggedEncodedCbor("eReaderKey", Cbor.encode(coseKey!!.toDataItem()))
+                putTaggedEncodedCbor("eReaderKey", Cbor.encode(coseKey.toDataItem()))
                 checkNotNull(messageCiphertext) { "Data cannot be empty in initial message" }
             }
             if (messageCiphertext != null) {

@@ -7,6 +7,7 @@ import org.multipaz.cbor.Tstr
 import org.multipaz.cbor.Uint
 import org.multipaz.cbor.annotation.CborSerializationImplemented
 import org.multipaz.cbor.buildCborMap
+import org.multipaz.cbor.toDataItem
 import org.multipaz.crypto.EcPrivateKey
 import org.multipaz.crypto.EcPublicKey
 
@@ -52,6 +53,17 @@ class CoseKey(val labels: Map<CoseLabel, DataItem>) {
         get() = EcPrivateKey.fromCoseKey(this)
 
     companion object {
+        fun buildPqc(publicKeyPqc: ByteArray): CoseKey {
+            return CoseKey(
+                mapOf(
+                    Pair(Cose.COSE_KEY_KTY.toCoseLabel, Cose.COSE_KEY_TYPE_PQC_KEM.toDataItem()),
+                    Pair(Cose.COSE_ALG_TYPE.toCoseLabel, Cose.COSE_ALG_TYPE_PQC_KEM.toDataItem()),
+                    Pair(Cose.COSE_KEY_PARAM_CRV.toCoseLabel, Cose.COSE_KEY_CRV_PQC_KEM.toDataItem()),
+                    Pair(Cose.COSE_KEY_PARAM_X.toCoseLabel, publicKeyPqc.toDataItem())
+                )
+            )
+        }
+
         /**
          * Gets a [CoseKey] from a CBOR data item.
          *

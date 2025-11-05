@@ -24,6 +24,7 @@ import org.multipaz.crypto.EcPrivateKey
 import org.multipaz.crypto.EcPublicKey
 import kotlinx.io.bytestring.ByteStringBuilder
 import org.multipaz.cbor.buildCborMap
+import org.multipaz.cose.CoseKey
 import org.multipaz.mdoc.role.MdocRole
 
 /**
@@ -46,8 +47,9 @@ import org.multipaz.mdoc.role.MdocRole
  */
 class SessionEncryption(
     val role: MdocRole,
-    private val eSelfKey: EcPrivateKey,
-    remotePublicKey: EcPublicKey,
+    private val eSelfKey: EcPrivateKey?,
+    private val eSelfKeyPqc: ByteArray?,
+    sharedSecret: ByteArray,
     encodedSessionTranscript: ByteArray
 ) {
     private var sessionEstablishmentSent = false
@@ -58,7 +60,6 @@ class SessionEncryption(
     private var sendSessionEstablishment = true
 
     init {
-        val sharedSecret = Crypto.keyAgreement(eSelfKey, remotePublicKey)
         val sessionTranscriptBytes = Cbor.encode(Tagged(24, Bstr(encodedSessionTranscript)))
         val salt = Crypto.digest(Algorithm.SHA256, sessionTranscriptBytes)
         var info = "SKDevice".encodeToByteArray()
@@ -73,6 +74,16 @@ class SessionEncryption(
             skRemote = deviceSK
         }
     }
+
+    constructor(
+        role: MdocRole,
+        eSelfKey: EcPrivateKey,
+        remotePublicKey: EcPublicKey,
+        encodedSessionTranscript: ByteArray) : this(role,
+                                                    eSelfKey,
+                                                    null, /* eSelfKeyPqc */
+                                                    Crypto.keyAgreement(eSelfKey, remotePublicKey),
+                                                    encodedSessionTranscript)
 
     /**
      * Configure whether to send `SessionEstablishment` as the first message. Only an
@@ -132,8 +143,15 @@ class SessionEncryption(
 
         val messageData = Cbor.encode(buildCborMap {
             if (!sessionEstablishmentSent && sendSessionEstablishment && role == MdocRole.MDOC_READER) {
-                var eReaderKey = eSelfKey.publicKey
-                putTaggedEncodedCbor("eReaderKey", Cbor.encode(eReaderKey.toCoseKey().toDataItem()))
+                val coseKey: CoseKey?
+                if (eSelfKey != null) {
+                    var eReaderKey = eSelfKey.publicKey
+                    coseKey = eReaderKey.toCoseKey()
+                } else {
+                    // TODO: implement for PQC
+                    coseKey = null
+                }
+                putTaggedEncodedCbor("eReaderKey", Cbor.encode(coseKey!!.toDataItem()))
                 checkNotNull(messageCiphertext) { "Data cannot be empty in initial message" }
             }
             if (messageCiphertext != null) {
@@ -201,6 +219,18 @@ class SessionEncryption(
         get() = decryptedCounter - 1
 
     companion object {
+        fun createPqc(role: MdocRole,
+                      eSelfKeyPqc: ByteArray,
+                      remotePublicKey: ByteArray,
+                      encodedSessionTranscript: ByteArray) : SessionEncryption {
+            val isInitiator = (role == MdocRole.MDOC_READER)
+            // TODO: retrieve encapsulated key from the SessionTranscript
+            // TODO: store encapsulated key for mdoc role
+            val encapsulatedKey = if (isInitiator) null else encodedSessionTranscript;
+            val kaResult = Crypto.keyAgreementPqc(eSelfKeyPqc, remotePublicKey, encapsulatedKey, isInitiator)
+            return SessionEncryption(role, null /*eSelfKey*/, eSelfKeyPqc, kaResult.first, encodedSessionTranscript)
+        }
+
         /**
          * Create a SessionData message (as defined in ISO/IEC 18013-5 9.1.1.4 Procedure) with a status
          * code and no data.

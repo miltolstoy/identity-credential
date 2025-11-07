@@ -172,7 +172,7 @@ abstract class MdocNdefService: HostApduService() {
         listenForCancellationFromUiJob = null
 
         val eDeviceKey = Crypto.createEcPrivateKey(settings.sessionEncryptionCurve)
-        val pqcEDeviceKey = Crypto.createPqcPrivateKey()
+        val pqcEDeviceKeyPair = Crypto.createPqcKeyPair()
         val timeStarted = Clock.System.now()
 
         presentmentModel.reset()
@@ -262,6 +262,7 @@ abstract class MdocNdefService: HostApduService() {
         //
         engagement = MdocNfcEngagementHelper(
             eDeviceKey = eDeviceKey.publicKey,
+            pqcEDeviceKey = pqcEDeviceKeyPair.publicKey,
             onHandoverComplete = { connectionMethods, encodedDeviceEngagement, handover ->
                 vibrateSuccess()
                 val duration = Clock.System.now() - timeStarted
@@ -270,7 +271,7 @@ abstract class MdocNdefService: HostApduService() {
                     encodedDeviceEngagement = encodedDeviceEngagement,
                     handover = handover,
                     eDeviceKey = eDeviceKey,
-                    pqcEDeviceKey = pqcEDeviceKey,
+                    pqcEDeviceKey = pqcEDeviceKeyPair.publicKey,
                     engagementDuration = duration
                 )
             },

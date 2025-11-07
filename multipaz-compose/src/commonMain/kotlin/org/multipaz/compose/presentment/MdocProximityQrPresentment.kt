@@ -17,7 +17,6 @@ import org.multipaz.cbor.Simple
 import org.multipaz.crypto.Crypto
 import org.multipaz.crypto.EcCurve
 import org.multipaz.documenttype.DocumentTypeRepository
-import org.multipaz.mdoc.connectionmethod.MdocConnectionMethod
 import org.multipaz.mdoc.engagement.EngagementGenerator
 import org.multipaz.mdoc.role.MdocRole
 import org.multipaz.mdoc.transport.MdocTransportFactory
@@ -91,7 +90,7 @@ fun MdocProximityQrPresentment(
                     presentmentModel.setConnecting()
                     coroutineScope.launch {
                         val eDeviceKey = Crypto.createEcPrivateKey(EcCurve.P256)
-                        val pqcEDeviceKey = Crypto.createPqcPrivateKey()
+                        val pqcEDeviceKeyPair = Crypto.createPqcKeyPair()
                         val advertisedTransports = qrSettings.availableConnectionMethods.advertise(
                             role = MdocRole.MDOC,
                             transportFactory = transportFactory,
@@ -99,7 +98,7 @@ fun MdocProximityQrPresentment(
                         )
                         val engagementGenerator = EngagementGenerator(
                             eSenderKey = eDeviceKey.publicKey,
-                            pqcESenderKey = pqcEDeviceKey,
+                            pqcESenderKey = pqcEDeviceKeyPair.publicKey,
                             version = "1.0"
                         )
                         engagementGenerator.addConnectionMethods(advertisedTransports.map {
@@ -117,7 +116,7 @@ fun MdocProximityQrPresentment(
                             MdocPresentmentMechanism(
                                 transport = transport,
                                 eDeviceKey = eDeviceKey,
-                                pqcEDeviceKey = pqcEDeviceKey,
+                                pqcEDeviceKey = pqcEDeviceKeyPair.publicKey,
                                 encodedDeviceEngagement = encodedDeviceEngagement,
                                 handover = Simple.NULL,
                                 engagementDuration = null,

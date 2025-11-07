@@ -585,7 +585,7 @@ private suspend fun doReaderFlow(
     val pqcEDeviceKey = deviceEngagement.pqcESenderKey
     Logger.i(TAG, "Using curve ${eDeviceKey.curve.name} for session encryption")
     eReaderKey.value = Crypto.createEcPrivateKey(eDeviceKey.curve)
-    pqcEReaderKey.value = Crypto.createPqcPrivateKey()
+    pqcEReaderKey.value = Crypto.createPqcKeyPair().privateKey
 
     val transport = if (existingTransport != null) {
         existingTransport

@@ -426,11 +426,11 @@ actual object Crypto {
             }
         }
 
-    actual fun createPqcPrivateKey(): ByteArray {
+    actual fun createPqcKeyPair(): PqcKeyPair {
         val generator = KeyPairGenerator.getInstance("Kyber")
         generator.initialize(KyberParameterSpec.kyber512)
         val keyPair = generator.generateKeyPair()
-        return keyPair.private.encoded
+        return PqcKeyPair(keyPair.public.encoded, keyPair.private.encoded)
     }
 
     /**

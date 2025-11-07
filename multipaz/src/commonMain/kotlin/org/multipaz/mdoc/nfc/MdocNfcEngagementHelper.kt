@@ -43,6 +43,7 @@ import org.multipaz.util.getUInt16
  */
 class MdocNfcEngagementHelper(
     val eDeviceKey: EcPublicKey,
+    val pqcEDeviceKey: ByteArray,
     val onHandoverComplete: (
         connectionMethods: List<MdocConnectionMethod>,
         encodedDeviceEngagement: ByteString,
@@ -150,6 +151,7 @@ class MdocNfcEngagementHelper(
                 } else {
                     val encodedDeviceEngagement = EngagementGenerator(
                         eDeviceKey,
+                        pqcEDeviceKey,
                         EngagementGenerator.ENGAGEMENT_VERSION_1_0
                     ).generate()
 
@@ -243,6 +245,7 @@ class MdocNfcEngagementHelper(
         //
         val encodedDeviceEngagement = EngagementGenerator(
             eDeviceKey,
+            pqcEDeviceKey,
             EngagementGenerator.ENGAGEMENT_VERSION_1_0
         ).generate()
 

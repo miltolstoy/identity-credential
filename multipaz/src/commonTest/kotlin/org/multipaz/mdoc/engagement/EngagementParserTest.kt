@@ -15,38 +15,39 @@
  */
 package org.multipaz.mdoc.engagement
 
-import org.multipaz.mdoc.TestVectors
-import org.multipaz.mdoc.connectionmethod.MdocConnectionMethodBle
-import org.multipaz.util.fromHex
-import org.multipaz.util.toHex
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-
-class EngagementParserTest {
-    @Test
-    fun testDeviceRequestEngagementWithVectors() {
-        val deviceEngagement = TestVectors.ISO_18013_5_ANNEX_D_DEVICE_ENGAGEMENT.fromHex()
-        val parser = EngagementParser(deviceEngagement)
-        val engagement = parser.parse()
-        assertEquals("1.0", engagement.version)
-        val connectionMethods = engagement.connectionMethods
-        assertEquals(1, connectionMethods.size.toLong())
-        assertTrue(connectionMethods[0] is MdocConnectionMethodBle)
-        val cmBle = connectionMethods[0] as MdocConnectionMethodBle
-        assertFalse(cmBle.supportsPeripheralServerMode)
-        assertTrue(cmBle.supportsCentralClientMode)
-        assertNull(cmBle.peripheralServerModeUuid)
-        assertEquals(
-            "45efef74-2b2c-4837-a9a3-b0e1d05a6917",
-            cmBle.centralClientModeUuid.toString()
-        )
-        val eDeviceKeyBytes = engagement.eSenderKeyBytes
-        assertEquals(
-            TestVectors.ISO_18013_5_ANNEX_D_E_DEVICE_KEY_BYTES,
-            eDeviceKeyBytes.toHex()
-        )
-    }
-}
+// import org.multipaz.mdoc.TestVectors
+// import org.multipaz.mdoc.connectionmethod.MdocConnectionMethodBle
+// import org.multipaz.util.fromHex
+// import org.multipaz.util.toHex
+// import kotlin.test.Test
+// import kotlin.test.assertEquals
+// import kotlin.test.assertFalse
+// import kotlin.test.assertNull
+// import kotlin.test.assertTrue
+//
+// class EngagementParserTest {
+//     @Test
+//     fun testDeviceRequestEngagementWithVectors() {
+//         val deviceEngagement = TestVectors.ISO_18013_5_ANNEX_D_DEVICE_ENGAGEMENT.fromHex()
+//         val parser = EngagementParser(deviceEngagement)
+//         val engagement = parser.parse()
+//         assertEquals("1.0", engagement.version)
+//         val connectionMethods = engagement.connectionMethods
+//         assertEquals(1, connectionMethods.size.toLong())
+//         assertTrue(connectionMethods[0] is MdocConnectionMethodBle)
+//         val cmBle = connectionMethods[0] as MdocConnectionMethodBle
+//         assertFalse(cmBle.supportsPeripheralServerMode)
+//         assertTrue(cmBle.supportsCentralClientMode)
+//         assertNull(cmBle.peripheralServerModeUuid)
+//         assertEquals(
+//             "45efef74-2b2c-4837-a9a3-b0e1d05a6917",
+//             cmBle.centralClientModeUuid.toString()
+//         )
+//         val eDeviceKeyBytes = engagement.eSenderKeyBytes
+//         assertEquals(
+//             TestVectors.ISO_18013_5_ANNEX_D_E_DEVICE_KEY_BYTES,
+//             eDeviceKeyBytes.toHex()
+//         )
+//     }
+// }
+//

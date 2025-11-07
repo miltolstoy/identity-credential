@@ -58,6 +58,8 @@ class EngagementParser(private val encodedEngagement: ByteArray) {
          */
         lateinit var eSenderKey: EcPublicKey
 
+        lateinit var pqcESenderKey: ByteArray
+
         /**
          * The encoding of the key that was sent from the other side.
          *
@@ -84,6 +86,7 @@ class EngagementParser(private val encodedEngagement: ByteArray) {
             val cipherSuite = security[0].asNumber
             require(cipherSuite == 1L) { "Expected cipher suite 1, got $cipherSuite" }
             eSenderKey = security[1].asTaggedEncodedCbor.asCoseKey.ecPublicKey
+            pqcESenderKey = security[2].asBstr
             this.eSenderKeyBytes = Cbor.encode(security[1])
             val connectionMethodsArray = map.getOrNull(2)
             val cms = mutableListOf<MdocConnectionMethod>()

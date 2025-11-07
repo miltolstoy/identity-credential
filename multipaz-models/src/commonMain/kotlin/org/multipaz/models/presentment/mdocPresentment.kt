@@ -92,7 +92,7 @@ internal suspend fun mdocPresentment(
                         MdocRole.MDOC,
                         mechanism.pqcEDeviceKey,
                         pqcEReaderKey!!,
-                        pqcEncapsulatedKey!!,
+                        pqcEncapsulatedKey,
                         encodedSessionTranscript,
                     )
                 } else {

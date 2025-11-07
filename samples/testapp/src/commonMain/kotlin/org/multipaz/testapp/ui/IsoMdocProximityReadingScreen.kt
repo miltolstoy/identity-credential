@@ -92,6 +92,8 @@ import org.multipaz.compose.cards.WarningCard
 import org.multipaz.compose.decodeImage
 import org.multipaz.compose.permissions.rememberBluetoothEnabledState
 import org.multipaz.compose.permissions.rememberBluetoothPermissionState
+import org.multipaz.crypto.CryptoConfig
+import org.multipaz.crypto.CryptoType
 import org.multipaz.mdoc.role.MdocRole
 import org.multipaz.mdoc.zkp.ZkDocument
 import org.multipaz.mdoc.zkp.ZkSystemRepository
@@ -151,6 +153,7 @@ fun IsoMdocProximityReadingScreen(
     val readerMostRecentDeviceResponse = remember { mutableStateOf<ByteArray?>(null) }
     val connectionMethodPickerData = remember { mutableStateOf<ConnectionMethodPickerData?>(null) }
     val eReaderKey = remember { mutableStateOf<EcPrivateKey?>(null) }
+    val pqcEReaderKey = remember { mutableStateOf<ByteArray?>(null) }
 
     var readerJob by remember { mutableStateOf<Job?>(null) }
 
@@ -243,6 +246,7 @@ fun IsoMdocProximityReadingScreen(
                                 readerSessionTranscript = readerSessionTranscript,
                                 readerMostRecentDeviceResponse = readerMostRecentDeviceResponse,
                                 eReaderKey = eReaderKey,
+                                pqcEReaderKey = pqcEReaderKey,
                                 selectedRequest = selectedRequest,
                                 selectConnectionMethod = { connectionMethods ->
                                     if (app.settingsModel.readerAutomaticallySelectTransport.value) {
@@ -526,6 +530,7 @@ fun IsoMdocProximityReadingScreen(
                                                 readerSessionTranscript = readerSessionTranscript,
                                                 readerMostRecentDeviceResponse = readerMostRecentDeviceResponse,
                                                 eReaderKey = eReaderKey,
+                                                pqcEReaderKey = pqcEReaderKey,
                                                 selectedRequest = selectedRequest,
                                                 selectConnectionMethod = { connectionMethods ->
                                                     if (app.settingsModel.readerAutomaticallySelectTransport.value) {
@@ -571,13 +576,16 @@ private suspend fun doReaderFlow(
     readerSessionTranscript: MutableState<ByteArray?>,
     readerMostRecentDeviceResponse: MutableState<ByteArray?>,
     eReaderKey: MutableState<EcPrivateKey?>,
+    pqcEReaderKey: MutableState<ByteArray?>,
     selectedRequest: MutableState<RequestPickerEntry>,
     selectConnectionMethod: suspend (connectionMethods: List<MdocConnectionMethod>) -> MdocConnectionMethod?
 ) {
     val deviceEngagement = EngagementParser(encodedDeviceEngagement.toByteArray()).parse()
     val eDeviceKey = deviceEngagement.eSenderKey
+    val pqcEDeviceKey = deviceEngagement.pqcESenderKey
     Logger.i(TAG, "Using curve ${eDeviceKey.curve.name} for session encryption")
     eReaderKey.value = Crypto.createEcPrivateKey(eDeviceKey.curve)
+    pqcEReaderKey.value = Crypto.createPqcPrivateKey()
 
     val transport = if (existingTransport != null) {
         existingTransport
@@ -620,7 +628,9 @@ private suspend fun doReaderFlow(
                         readerMostRecentDeviceResponse = readerMostRecentDeviceResponse,
                         selectedRequest = selectedRequest,
                         eDeviceKey = eDeviceKey,
+                        pqcEDeviceKey = pqcEDeviceKey,
                         eReaderKey = eReaderKey.value!!,
+                        pqcEReaderKey = pqcEReaderKey.value!!,
                     )
                 }
             )
@@ -643,7 +653,9 @@ private suspend fun doReaderFlow(
         readerMostRecentDeviceResponse = readerMostRecentDeviceResponse,
         selectedRequest = selectedRequest,
         eDeviceKey = eDeviceKey,
+        pqcEDeviceKey = pqcEDeviceKey,
         eReaderKey = eReaderKey.value!!,
+        pqcEReaderKey = pqcEReaderKey.value!!,
     )
 }
 
@@ -662,7 +674,9 @@ private suspend fun doReaderFlowWithTransport(
     readerMostRecentDeviceResponse: MutableState<ByteArray?>,
     selectedRequest: MutableState<RequestPickerEntry>,
     eDeviceKey: EcPublicKey,
+    pqcEDeviceKey: ByteArray,
     eReaderKey: EcPrivateKey,
+    pqcEReaderKey: ByteArray,
 ) {
     if (updateNfcDialogMessage != null) {
         updateNfcDialogMessage("Transferring data, don't move your phone")
@@ -673,12 +687,24 @@ private suspend fun doReaderFlowWithTransport(
         handover,
         eReaderKey.publicKey
     )
-    val sessionEncryption = SessionEncryption(
-        MdocRole.MDOC_READER,
-        eReaderKey,
-        eDeviceKey,
-        encodedSessionTranscript,
-    )
+
+    val sessionEncryption: SessionEncryption
+    if (CryptoConfig.cryptoType == CryptoType.PQC) {
+        sessionEncryption = SessionEncryption.createPqc(
+            MdocRole.MDOC_READER,
+            pqcEDeviceKey,
+            pqcEReaderKey,
+            null /*pqcEncapsulatedKey*/,
+            encodedSessionTranscript,
+        )
+    } else {
+        sessionEncryption = SessionEncryption(
+            MdocRole.MDOC_READER,
+            eReaderKey,
+            eDeviceKey,
+            encodedSessionTranscript,
+        )
+    }
     readerSessionEncryption.value = sessionEncryption
     readerSessionTranscript.value = encodedSessionTranscript
     val encodedDeviceRequest = TestAppUtils.generateEncodedDeviceRequest(

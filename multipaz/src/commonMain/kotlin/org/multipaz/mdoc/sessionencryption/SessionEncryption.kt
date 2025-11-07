@@ -221,7 +221,7 @@ class SessionEncryption(
         fun createPqc(role: MdocRole,
                       eSelfKeyPqc: ByteArray,
                       remotePublicKey: ByteArray,
-                      encapsulatedKey: ByteArray,
+                      encapsulatedKey: ByteArray?,
                       encodedSessionTranscript: ByteArray) : SessionEncryption {
             val isInitiator = (role == MdocRole.MDOC_READER)
             val kaResult = Crypto.keyAgreementPqc(eSelfKeyPqc, remotePublicKey, encapsulatedKey, isInitiator)

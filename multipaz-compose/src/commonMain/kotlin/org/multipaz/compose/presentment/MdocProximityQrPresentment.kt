@@ -99,6 +99,7 @@ fun MdocProximityQrPresentment(
                         )
                         val engagementGenerator = EngagementGenerator(
                             eSenderKey = eDeviceKey.publicKey,
+                            pqcESenderKey = pqcEDeviceKey,
                             version = "1.0"
                         )
                         engagementGenerator.addConnectionMethods(advertisedTransports.map {

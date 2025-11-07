@@ -21,6 +21,7 @@ import org.multipaz.cbor.CborArray
 import org.multipaz.cbor.CborBuilder
 import org.multipaz.cbor.buildCborMap
 import org.multipaz.cbor.putCborArray
+import org.multipaz.cbor.toDataItem
 import org.multipaz.crypto.EcPublicKey
 import org.multipaz.mdoc.connectionmethod.MdocConnectionMethod
 import org.multipaz.mdoc.origininfo.OriginInfo
@@ -34,6 +35,7 @@ import org.multipaz.mdoc.origininfo.OriginInfo
  */
 class EngagementGenerator(
     private val eSenderKey: EcPublicKey,
+    private val pqcESenderKey: ByteArray,
     private val version: String
 ) {
     private var deviceRetrievalMethodsArrayBuilder: ArrayBuilder<CborBuilder> = CborArray.builder()
@@ -79,6 +81,8 @@ class EngagementGenerator(
                     add(1) // cipher suite
                     val encodedCoseKey = Cbor.encode(eSenderKey.toCoseKey(emptyMap()).toDataItem())
                     addTaggedEncodedCbor(encodedCoseKey)
+                    val pqcKey = Cbor.encode(pqcESenderKey.toDataItem())
+                    add(pqcKey)
                 }
                 val deviceRetrievalMethodsArray = deviceRetrievalMethodsArrayBuilder.end().build()
                 if (!deviceRetrievalMethodsArray.asArray.isEmpty()) {

@@ -426,6 +426,13 @@ actual object Crypto {
             }
         }
 
+    actual fun createPqcPrivateKey(): ByteArray {
+        val generator = KeyPairGenerator.getInstance("Kyber")
+        generator.initialize(KyberParameterSpec.kyber512)
+        val keyPair = generator.generateKeyPair()
+        return keyPair.private.encoded
+    }
+
     /**
      * Signs data with a key.
      *

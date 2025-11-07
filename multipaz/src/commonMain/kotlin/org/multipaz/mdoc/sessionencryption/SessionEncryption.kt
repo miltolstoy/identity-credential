@@ -255,6 +255,16 @@ class SessionEncryption(
             return EReaderKey(publicKey, encodedCoseKey)
         }
 
+        fun getPqcEReaderKey(sessionEstablishmentMessage: ByteArray): ByteArray? {
+            val map = Cbor.decode(sessionEstablishmentMessage)
+            val item = map.getOrNull("pqcReaderKey")
+            if (item == null) {
+                return null;
+            }
+            val keyTagged = item.asTagged.asBstr
+            return Cbor.decode(keyTagged).asBstr
+        }
+
         fun getPqcEncapsulatedKey(sessionEstablishmentMessage: ByteArray): ByteArray? {
             val map = Cbor.decode(sessionEstablishmentMessage)
             val item = map.getOrNull("pqcEncapsulatedKey")

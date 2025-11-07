@@ -134,6 +134,8 @@ expect object Crypto {
      */
     fun createEcPrivateKey(curve: EcCurve): EcPrivateKey
 
+    fun createPqcPrivateKey(): ByteArray
+
     /**
      * Signs data with a key.
      *

@@ -7,6 +7,9 @@ import org.multipaz.cbor.Bstr
 import org.multipaz.cbor.Cbor
 import org.multipaz.cbor.Tagged
 import org.multipaz.cbor.buildCborArray
+import org.multipaz.crypto.Crypto
+import org.multipaz.crypto.CryptoConfig
+import org.multipaz.crypto.CryptoType
 import org.multipaz.crypto.EcPublicKey
 import org.multipaz.document.Document
 import org.multipaz.document.NameSpacedData
@@ -74,6 +77,8 @@ internal suspend fun mdocPresentment(
 
             if (sessionEncryption == null) {
                 val eReaderKey = SessionEncryption.getEReaderKey(sessionData)
+                val pqcEReaderKey = SessionEncryption.getPqcEReaderKey(sessionData)
+                val pqcEncapsulatedKey = SessionEncryption.getPqcEncapsulatedKey(sessionData)
                 encodedSessionTranscript =
                     Cbor.encode(
                         buildCborArray {
@@ -82,12 +87,22 @@ internal suspend fun mdocPresentment(
                             add(mechanism.handover)
                         }
                     )
-                sessionEncryption = SessionEncryption(
-                    MdocRole.MDOC,
-                    mechanism.eDeviceKey,
-                    eReaderKey.publicKey,
-                    encodedSessionTranscript,
-                )
+                if (CryptoConfig.cryptoType == CryptoType.PQC) {
+                    sessionEncryption = SessionEncryption.createPqc(
+                        MdocRole.MDOC,
+                        mechanism.pqcEDeviceKey,
+                        pqcEReaderKey!!,
+                        pqcEncapsulatedKey!!,
+                        encodedSessionTranscript,
+                    )
+                } else {
+                    sessionEncryption = SessionEncryption(
+                        MdocRole.MDOC,
+                        mechanism.eDeviceKey,
+                        eReaderKey.publicKey,
+                        encodedSessionTranscript,
+                    )
+                }
             }
             val (encodedDeviceRequest, status) = sessionEncryption.decryptMessage(sessionData)
 

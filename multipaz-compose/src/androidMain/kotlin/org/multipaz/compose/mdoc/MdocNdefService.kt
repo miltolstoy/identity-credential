@@ -172,6 +172,7 @@ abstract class MdocNdefService: HostApduService() {
         listenForCancellationFromUiJob = null
 
         val eDeviceKey = Crypto.createEcPrivateKey(settings.sessionEncryptionCurve)
+        val pqcEDeviceKey = Crypto.createPqcPrivateKey()
         val timeStarted = Clock.System.now()
 
         presentmentModel.reset()
@@ -269,6 +270,7 @@ abstract class MdocNdefService: HostApduService() {
                     encodedDeviceEngagement = encodedDeviceEngagement,
                     handover = handover,
                     eDeviceKey = eDeviceKey,
+                    pqcEDeviceKey = pqcEDeviceKey,
                     engagementDuration = duration
                 )
             },
@@ -288,6 +290,7 @@ abstract class MdocNdefService: HostApduService() {
         encodedDeviceEngagement: ByteString,
         handover: DataItem,
         eDeviceKey: EcPrivateKey,
+        pqcEDeviceKey: ByteArray,
         engagementDuration: Duration,
     ) {
         presentmentModel.presentmentScope.launch {
@@ -303,6 +306,7 @@ abstract class MdocNdefService: HostApduService() {
                 MdocPresentmentMechanism(
                     transport = transport,
                     eDeviceKey = eDeviceKey,
+                    pqcEDeviceKey = pqcEDeviceKey,
                     encodedDeviceEngagement = encodedDeviceEngagement,
                     handover = handover,
                     engagementDuration = engagementDuration,

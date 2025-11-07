@@ -24,6 +24,7 @@ import kotlin.time.Duration
 class MdocPresentmentMechanism(
     val transport: MdocTransport,
     val eDeviceKey: EcPrivateKey,
+    val pqcEDeviceKey: ByteArray,
     val encodedDeviceEngagement: ByteString,
     val handover: DataItem,
     val engagementDuration: Duration?,

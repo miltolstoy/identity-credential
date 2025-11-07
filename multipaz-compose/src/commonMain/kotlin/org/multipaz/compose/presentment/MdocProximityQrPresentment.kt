@@ -91,6 +91,7 @@ fun MdocProximityQrPresentment(
                     presentmentModel.setConnecting()
                     coroutineScope.launch {
                         val eDeviceKey = Crypto.createEcPrivateKey(EcCurve.P256)
+                        val pqcEDeviceKey = Crypto.createPqcPrivateKey()
                         val advertisedTransports = qrSettings.availableConnectionMethods.advertise(
                             role = MdocRole.MDOC,
                             transportFactory = transportFactory,
@@ -115,6 +116,7 @@ fun MdocProximityQrPresentment(
                             MdocPresentmentMechanism(
                                 transport = transport,
                                 eDeviceKey = eDeviceKey,
+                                pqcEDeviceKey = pqcEDeviceKey,
                                 encodedDeviceEngagement = encodedDeviceEngagement,
                                 handover = Simple.NULL,
                                 engagementDuration = null,
